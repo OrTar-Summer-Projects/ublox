@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>u-blox Data</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript"> // Start of inline JavaScript
+        google.charts.load('current', {'packages':['corechart', 'table']}); // Load specific packages from Google Charts library
+        google.charts.setOnLoadCallback(initialize); // Set a callback function to be executed once Google Charts is loaded
+
+        function initialize() { // Start of the initialize function
+            var socket = io(); // Create a Socket.IO instance
+
+            socket.on('gnss-data', function (gnssData) { // Listens for 'gnss-data' events from the server
+                var latitude = gnssData.latitude;
+                var longitude = gnssData.longitude;
+
+                if (latitude && longitude) { // Checks if the latitude and longitude are valid numbers
+                    console.log('Data:', latitude, longitude); // Logs the latitude and longitude to the console
+                    drawChart(latitude, longitude); // Calls the drawChart function with the latitude and longitude
+                } else {
+                    console.error('Invalid data:', gnssData); // Logs an error message if the latitude or longitude is not a valid number
+                }
+            });
+        }
+
+        function drawChart(latitude, longitude) { // Start of the drawChart function
+            var data = [ // Create a data array with latitude and longitude
+                ['Latitude', 'Longitude'], // Headers for the data array
+                [latitude, longitude] // Values for latitude and longitude
+            ];
+
+            console.log('Data:', data); // Log the data array to the console
+
+            var dataTable = new google.visualization.DataTable(); // Create a new DataTable
+            dataTable.addColumn('number', 'Latitude'); // Add a 'number' column for latitude
+            dataTable.addColumn('number', 'Longitude'); // Add a 'number' column for longitude
+            dataTable.addColumn({type: 'string', role: 'tooltip'}); // Add a 'string' column for tooltips
+
+            // Add rows to the DataTable
+            for (var i = 1; i < data.length; i++) {
+                dataTable.addRow([data[i][0], data[i][1], 'Latitude: ' + data[i][0] + ', Longitude: ' + data[i][1]]);
+            }
+
+            var options = { // Set options for the chart
+                title: 'u-blox Data', // Title of the chart
+                legend: 'none', // Do not display a legend
+                pointSize: 5, // Size of the points
+                dataOpacity: 1, // Opacity of the points
+                tooltip: { trigger: 'focus' }, // Display tooltips when a point is selected
+                hAxis: { title: 'Latitude' }, // Title of the horizontal axis
+                vAxis: { title: 'Longitude' }, // Title of the vertical axis
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('curve_chart')); // Create a LineChart instance
+            chart.draw(dataTable, options); // Draw the chart with the DataTable and options
+        }
+    </script>
+</head>
+<body>
+    <div id="curve_chart" style="width: 900px; height: 500px"></div>
+</body>
+</html>

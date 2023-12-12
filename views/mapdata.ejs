@@ -1,0 +1,69 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+  <meta charset="UTF-8"> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>u-blox Data Map</title> 
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> 
+  <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script> 
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.min.js"></script> 
+  <script type="text/javascript" src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" 
+          integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" 
+          crossorigin="" defer></script> 
+
+  <link rel="stylesheet" type="text/css" href="/css/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+        integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+        crossorigin=""/> 
+</head>
+
+<body onload="initialize()" data-rsssl=1> 
+  <h1>u-blox Data Map</h1>
+  <div id="map" style="height: 600px;"></div>  
+
+  <script type="text/javascript"> // Starts a JavaScript block
+    var map; // Declares a variable that will hold the map object
+
+    function initialize() { // Defines the initialize function
+      map = L.map('map').setView([0, 0], 13); // Initializes the map and sets the initial view to coordinates [0, 0] and zoom level 5
+
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { // Adds a tile layer to the map
+        maxZoom: 19, // Sets the maximum zoom level
+        attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>' // Sets the attribution for the tile layer
+      }).addTo(map); // Adds the tile layer to the map
+
+      var socket = io(); // Initializes a Socket.IO connection
+
+      socket.on('gnss-data', function (gnssData) { // Listens for 'gnss-data' events from the server
+        var latitude = gnssData.latitude;
+        var longitude = gnssData.longitude;
+
+        if (latitude && longitude) { // Checks if the latitude and longitude are valid numbers
+          console.log('Data:', latitude, longitude); // Logs the latitude and longitude to the console
+          updateMap(latitude, longitude); // Calls the updateMap function with the latitude and longitude
+        } else {
+          console.error('Invalid data:', gnssData); // Logs an error message if the latitude or longitude is not a valid number
+        }
+      });
+    }
+
+    function updateMap(latitude, longitude) { // Defines a function to update the map
+      map.setView([latitude, longitude], 16); // Sets the view of the map to the given latitude and longitude and zoom level 13
+
+      // Clear previous markers
+      map.eachLayer(function (layer) { // Iterates over each layer on the map
+        if (layer instanceof L.Marker) { // Checks if the layer is a marker
+          layer.remove(); // Removes the marker from the map
+        }
+      });
+
+      // Add a new marker
+      var marker = L.marker([latitude, longitude]).addTo(map); // Adds a new marker to the map at the given latitude and longitude
+      marker.bindPopup(`Latitude: ${latitude}<br>Longitude: ${longitude}`); // Binds a popup to the marker that displays the latitude and longitude
+      marker.openPopup(); // Opens the popup
+    }
+  </script>
+</body>
+</html>
